@@ -3,16 +3,16 @@ package norseninja.bankers_algorithm;
 public class Allocator {
 
     //resources currently allocated
-    private static final int[][] allocated = {{1,0,0},{0,1,1},{0,2,1},{1,1,1},{0,0,0}};
+    private static final int[][] allocated = {{0,0,1,2},{1,0,0,0},{1,3,5,4},{0,6,3,2},{0,0,1,4}};
 
     //resources necessary for completion of task
-    private static final int[][] max = {{1,2,0},{1,1,1},{0,3,2},{4,4,5},{3,0,3}};
+    private static final int[][] max = {{0,0,1,2},{1,7,5,0},{2,3,5,6},{0,6,5,2},{0,6,5,6}};
 
     //finished tasks
     private static final boolean[] finished = {false, false, false, false, false};
 
     //total resources
-    private static final int a = 5, b = 7, c = 9;
+    private static final int a = 3, b = 14, c = 12, d = 12;
 
 
     public static void main(String[] args) {
@@ -28,8 +28,6 @@ public class Allocator {
                 System.out.println("Not enough resources to proceed.");
             }
         }
-
-
     }
 
     /**
@@ -39,27 +37,23 @@ public class Allocator {
      * @return true if finished, false in case of resource discrepancy.
      */
     private static boolean completeTask(int i) {
-        boolean ableToFinish = true;
         for (int j = 0; j < max[i].length; j++) {
             if (max[i][j] - allocated[i][j] > getAvailable()[j]) {
-                ableToFinish = false;
-                break;
+                return false;
             }
         }
-        if (ableToFinish) {
-            finished[i] = true;
-        }
-        return ableToFinish;
+        finished[i] = true;
+        return true;
     }
 
     /**
-     * Finds the task that will spend the most of the available resources in order to execute.
+     * Finds the task that will free the most resources upon completion.
      * @return the index of the most resource-demanding task able
      * to execute with the resources on hand, or -1 if dead-locked.
      */
     private static int getNextTask() {
         int optimalTask = -1;
-        int optimalTaskLeftovers = 100;
+        int optimalTaskAlloc = 0;
         for (int i = 0; i < max.length; i++) {
             if (!finished[i]) {
                 int[] task = max[i];
@@ -68,11 +62,18 @@ public class Allocator {
                 int ra = available[0] - task[0] + alloc[0];
                 int rb = available[1] - task[1] + alloc[1];
                 int rc = available[2] - task[2] + alloc[2];
-                if (ra >= 0 && rb >= 0 && rc >= 0) {
-                    int leftovers = ra + rb + rc;
-                    if (leftovers > 0 && leftovers < optimalTaskLeftovers) {
+                int rd = available[3] - task[3] + alloc[3];
+
+                int totalAlloc = 0;
+                for (int y : alloc) {
+                    totalAlloc += y;
+                }
+
+                if (ra >= 0 && rb >= 0 && rc >= 0 && rd >= 0) {
+                    int leftovers = ra + rb + rc + rd;
+                    if (leftovers >= 0 && totalAlloc > optimalTaskAlloc) {
                         optimalTask = i;
-                        optimalTaskLeftovers = leftovers;
+                        optimalTaskAlloc = totalAlloc;
                     }
                 }
             }
@@ -88,14 +89,16 @@ public class Allocator {
         int aa = a;
         int ab = b;
         int ac = c;
+        int ad = d;
         for (int i = 0; i < max.length; i++) {
             if (!finished[i]) {
                 aa -= allocated[i][0];
                 ab -= allocated[i][1];
                 ac -= allocated[i][2];
+                ad -= allocated[i][3];
             }
         }
-        return new int[]{aa,ab,ac};
+        return new int[]{aa,ab,ac,ad};
     }
 
     /**
